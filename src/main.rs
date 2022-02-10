@@ -3,20 +3,20 @@ extern crate core_affinity;
 
 use core_affinity::CoreId;
 use crossbeam::channel;
-use crossbeam::channel::Sender;
+use crossbeam::channel::{Receiver, Sender};
 use sha256_calculator::search;
 use std::thread;
 
-const N_ZEROS: i32 = 2;
+const N_ZEROS: i32 = 6;
 
 fn main() {
     // Retrieve the IDs of a<ll active CPU cores.
     let core_ids = core_affinity::get_core_ids().unwrap();
-    let (sender, reciever) = channel::unbounded::<String>();
-    let mut handler_params: Vec<(CoreId, Sender<String>)> = Vec::new();
+    let (sender, receiver) = channel::unbounded::<String>();
+    let mut handler_params: Vec<(CoreId, Sender<String>, Receiver<String>)> = Vec::new();
 
     for idx in 0..(core_ids.len()) {
-        handler_params.push((core_ids[idx], sender.clone()));
+        handler_params.push((core_ids[idx], sender.clone(), receiver.clone()));
     }
 
     // Create a thread for each active CPU core.
@@ -26,14 +26,14 @@ fn main() {
             thread::spawn(move || {
                 // Pin this thread to a single CPU core.
                 core_affinity::set_for_current(param.0);
-                search(N_ZEROS, param.1);
+                search(N_ZEROS, param.1, param.2);
             })
         })
         .collect::<Vec<_>>();
 
     drop(sender);
 
-    for msg in reciever {
+    for msg in receiver {
         println!("Child thread: Received {}", msg);
     }
 
