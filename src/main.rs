@@ -15,18 +15,21 @@ fn main() {
     let (sender, receiver) = channel::unbounded::<String>();
     let mut handler_params: Vec<(CoreId, Sender<String>, Receiver<String>)> = Vec::new();
 
-    for idx in 0..(core_ids.len()) {
-        handler_params.push((core_ids[idx], sender.clone(), receiver.clone()));
+    for core_id in core_ids {
+        handler_params.push((core_id, sender.clone(), receiver.clone()));
     }
 
     // Create a thread for each active CPU core.
-    let handles = handler_params.into_iter().map(|param| {
-        thread::spawn(move || {
-            // Pin this thread to a single CPU core.
-            core_affinity::set_for_current(param.0);
-            search(N_ZEROS, param.0, param.1, param.2);
+    let handles = handler_params
+        .into_iter()
+        .map(|param| {
+            thread::spawn(move || {
+                // Pin this thread to a single CPU core.
+                core_affinity::set_for_current(param.0);
+                search(N_ZEROS, param.0, param.1, param.2);
+            })
         })
-    });
+        .collect::<Vec<_>>();
 
     drop(sender);
 
@@ -34,7 +37,7 @@ fn main() {
         println!("{}", msg);
     }
 
-    for handle in handles {
+    for handle in handles.into_iter() {
         handle.join().unwrap();
     }
 }
