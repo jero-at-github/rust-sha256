@@ -23,7 +23,7 @@ pub fn search(n_zeros: i32, core_id: CoreId, sender: Sender<String>, receiver: R
                 .unwrap();
             drop(sender);
             break;
-        } else if receiver.len() > 0 {
+        } else if !receiver.is_empty() {
             drop(sender);
             break;
         };

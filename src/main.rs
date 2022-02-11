@@ -20,16 +20,13 @@ fn main() {
     }
 
     // Create a thread for each active CPU core.
-    let handles = handler_params
-        .into_iter()
-        .map(|param| {
-            thread::spawn(move || {
-                // Pin this thread to a single CPU core.
-                core_affinity::set_for_current(param.0);
-                search(N_ZEROS, param.0, param.1, param.2);
-            })
+    let handles = handler_params.into_iter().map(|param| {
+        thread::spawn(move || {
+            // Pin this thread to a single CPU core.
+            core_affinity::set_for_current(param.0);
+            search(N_ZEROS, param.0, param.1, param.2);
         })
-        .collect::<Vec<_>>();
+    });
 
     drop(sender);
 
@@ -37,7 +34,7 @@ fn main() {
         println!("{}", msg);
     }
 
-    for handle in handles.into_iter() {
+    for handle in handles {
         handle.join().unwrap();
     }
 }
