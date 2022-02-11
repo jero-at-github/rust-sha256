@@ -7,7 +7,7 @@ use crossbeam::channel::{Receiver, Sender};
 use sha256_calculator::search;
 use std::thread;
 
-const N_ZEROS: i32 = 6;
+const N_ZEROS: i32 = 4;
 
 fn main() {
     // Retrieve the IDs of a<ll active CPU cores.
@@ -26,7 +26,7 @@ fn main() {
             thread::spawn(move || {
                 // Pin this thread to a single CPU core.
                 core_affinity::set_for_current(param.0);
-                search(N_ZEROS, param.1, param.2);
+                search(N_ZEROS, param.0, param.1, param.2);
             })
         })
         .collect::<Vec<_>>();
@@ -34,7 +34,7 @@ fn main() {
     drop(sender);
 
     for msg in receiver {
-        println!("Child thread: Received {}", msg);
+        println!("{}", msg);
     }
 
     for handle in handles.into_iter() {
