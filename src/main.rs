@@ -6,6 +6,7 @@ use crossbeam::channel;
 use crossbeam::channel::{Receiver, Sender};
 use sha256_calculator::search;
 use std::thread;
+use std::thread::JoinHandle;
 
 const N_ZEROS: i32 = 4;
 
@@ -19,6 +20,8 @@ fn main() {
         handler_params.push((core_id, sender.clone(), receiver.clone()));
     }
 
+    drop(sender);
+
     // Create a thread for each active CPU core.
     let handles = handler_params
         .into_iter()
@@ -29,9 +32,7 @@ fn main() {
                 search(N_ZEROS, param.0, param.1, param.2);
             })
         })
-        .collect::<Vec<_>>();
-
-    drop(sender);
+        .collect::<Vec<JoinHandle<()>>>();
 
     for msg in receiver {
         println!("{}", msg);
