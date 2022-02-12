@@ -1,6 +1,7 @@
 #![allow(dead_code, unused_variables)]
 extern crate core_affinity;
 
+use chrono::Utc;
 use core_affinity::CoreId;
 use crossbeam::channel;
 use crossbeam::channel::{Receiver, Sender};
@@ -8,7 +9,7 @@ use sha256_calculator::search;
 use std::thread;
 use std::thread::JoinHandle;
 
-const N_ZEROS: i32 = 4;
+const N_ZEROS: i32 = 8;
 
 fn main() {
     // Retrieve the IDs of a<ll active CPU cores.
@@ -21,6 +22,9 @@ fn main() {
     }
 
     drop(sender);
+
+    let mut now = Utc::now();
+    println!("{}", now);
 
     // Create a thread for each active CPU core.
     let handles = handler_params
@@ -41,4 +45,7 @@ fn main() {
     for handle in handles.into_iter() {
         handle.join().unwrap();
     }
+
+    now = Utc::now();
+    println!("{}", now);
 }
